@@ -3,31 +3,23 @@ import {InfluxDBClient, Point} from '@influxdata/influxdb3-client'
 // Load environment variables for InfluxDB connection
 const token = process.env.INFLUXDB_TOKEN
 
-export async function main() {
+export async function generateTestData() {
     const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
 
-    let database = `healthrack_hr_spo2`
+    let database = `hr_spo2`
 
+    function getRandomNumber(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    let hr = getRandomNumber(60, 178)
+    let ox = getRandomNumber(87, 99)
     const points =
     [
-        Point.measurement("census")
-            .setTag("location", "Klamath")
-            .setIntegerField("bees", 23),
-        Point.measurement("census")
-            .setTag("location", "Portland")
-            .setIntegerField("ants", 30),
-        Point.measurement("census")
-            .setTag("location", "Klamath")
-            .setIntegerField("bees", 28),
-        Point.measurement("census")
-            .setTag("location", "Portland")
-            .setIntegerField("ants", 32),
-        Point.measurement("census")
-            .setTag("location", "Klamath")
-            .setIntegerField("bees", 29),
-        Point.measurement("census")
-            .setTag("location", "Portland")
-            .setIntegerField("ants", 40)
+        Point.measurement('sensor')
+            .setIntegerField("heart", hr),
+        Point.measurement('sensor')
+            .setIntegerField("oxygen", ox)
     ];
 
     for (let i = 0; i < points.length; i++) {
@@ -37,19 +29,38 @@ export async function main() {
             .then(() => new Promise(resolve => setTimeout(resolve, 1000)));
     }
 
-    const query = `SELECT * FROM 'census' 
-    WHERE time >= now() - interval '24 hours' AND 
-    ('bees' IS NOT NULL OR 'ants' IS NOT NULL) order by time asc`
+    client.close()
+    const responseData = {"HR": hr, "O2": ox};
+    return responseData;
+}
 
-    const rows = await client.query(query, 'healthrack_hr_spo2')
+export async function fetchData() {
+    const bucket = `hr_spo2`
+    // Initialize the InfluxDB client
+    const client = new InfluxDBClient({
+        host: 'https://us-east-1-1.aws.cloud2.influxdata.com',
+        token: token,
+    });
 
-    console.log(`${"ants".padEnd(5)}${"bees".padEnd(5)}${"location".padEnd(10)}${"time".padEnd(15)}`);
+    const query = `SELECT * FROM 'sensor'
+    WHERE time >= now() - interval '1 day' 
+    AND ("heart" IS NOT NULL OR "oxygen" IS NOT NULL)`;
+
+    // Execute the query against the specified bucket
+    const rows = await client.query(query, bucket);
+
+    // Print headers for the columns you expect to receive
+    console.log(`${"heart".padEnd(5)}${"oxygen".padEnd(5)}${"time".padEnd(15)}`);
+
+    let data = [];
+
+    // Iterate through the rows of data to populate the data array
     for await (const row of rows) {
-        let ants = row.ants || '';
-        let bees = row.bees || '';
-        let time = new Date(row.time);
-        console.log(`${ants.toString().padEnd(5)}${bees.toString().padEnd(5)}${row.location.padEnd(10)}${time.toString().padEnd(15)}`);
+        let heart = row.heart || '';
+        let oxygen = row.oxygen || '';
+        let time = new Date(row.time).toISOString(); // Format time as ISO string for consistency
+        data.push({ heart, oxygen, time });
     }
 
-    client.close()
+    return data;
 }
