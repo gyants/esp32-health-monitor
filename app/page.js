@@ -46,15 +46,15 @@ const Home = () => {
   return (
     <main className="w-full bg-gray-900 h-lvh text-center px-25 py-4 flex flex-col items-center justify-between">
       <div className="container flex flex-col text-start py-14 h-full gap-4">
-       <div className="flex gap-2 items-baseline">
-          <span className="text-5xl font-bold mr-3">ESP32 Health Monitor</span>
+       <div className="md:flex gap-2 items-baseline">
+          <span className="text-2xl md:text-5xl font-bold mr-3">ESP32 Health Monitor</span>
           <div className="relative h-3 w-3">
-            <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            {/* <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div> */}
 
           </div>
-          <span>Sensors {connected ? `Online` : `Offline`}</span>
+          {/* <span>Sensors {connected ? `Online` : `Offline`}</span> */}
        </div>
-       <div className="flex bg-transparent gap-4 h-full">
+       <div className="md:flex bg-transparent gap-4 h-full">
 
           <ChartArea
             isLoading = {isLoading}
@@ -101,7 +101,7 @@ const Home = () => {
        
         
       </div>
-      <span>I-siri Sriuthai • Nathamon Kulchonchan</span>
+      <span className="text-xs md:text-base">I-siri Sriuthai • Nathamon Kulchonchan</span>
     </main>
   )
 }

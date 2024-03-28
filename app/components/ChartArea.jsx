@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ChartComponent } from "./Chart"
 export const ChartArea = ({isLoading,data,refresh}) => {
+    console.log(data)
     const [isHeartRateVisible, setIsHeartRateVisible] = useState(true)
     const [isSpO2Visible, setIsSpO2Visible] = useState(true)
     return (
@@ -12,10 +13,10 @@ export const ChartArea = ({isLoading,data,refresh}) => {
                 isSpO2Visible = {isSpO2Visible}
                 data = {data}
             />}
-            <div className="flex justify-between items-center px-6">
+            <div className="md:flex justify-between items-center px-6">
               <span>Toggle:</span>
               <button
-                    className={`font-medium rounded-full text-black px-8 py-3 hover:bg-gray-200 min-w-48 ${
+                    className={`md:text-base font-medium rounded-full text-black px-8 py-3 hover:bg-gray-200 min-w-36 md:min-w-48 ${
                         isHeartRateVisible ? 'bg-white' : 'bg-gray-400 opacity-50'
                     }`}
                     onClick={() => setIsHeartRateVisible(!isHeartRateVisible)}
@@ -23,7 +24,7 @@ export const ChartArea = ({isLoading,data,refresh}) => {
                     Heart Rate
                 </button>
                 <button
-                    className={`font-medium rounded-full text-black px-8 py-3 hover:bg-gray-200 min-w-48 ${
+                    className={`font-medium rounded-full text-black px-8 py-3 hover:bg-gray-200 min-w-36 md:min-w-48 ${
                         isSpO2Visible ? 'bg-white' : 'bg-gray-400 opacity-50'
                     }`}
                     onClick={() => setIsSpO2Visible(!isSpO2Visible)}
