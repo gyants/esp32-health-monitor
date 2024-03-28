@@ -53,7 +53,7 @@ export async function publish(time) {
       port: 8883,
       username: process.env.NEXT_PUBLIC_MQTT_USERNAME,
       password: process.env.NEXT_PUBLIC_MQTT_PASSWORD,
-      clean: false
+    //   clean: false
     });
 
     client.on('connect', function () {
