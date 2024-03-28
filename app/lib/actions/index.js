@@ -48,17 +48,16 @@ export async function notifyToMeasure(time) { // notify Heart Rate, Oxygen, Time
     }
 }
 
-export async function publish(time) {
+export async function publish() {
     const client  = mqtt.connect('mqtts://47c8123bb31c409aa7d801e737229793.s1.eu.hivemq.cloud', {
       port: 8883,
       username: process.env.NEXT_PUBLIC_MQTT_USERNAME,
       password: process.env.NEXT_PUBLIC_MQTT_PASSWORD,
     //   clean: false
     });
-    console.log(time)
     client.on('connect', function () {
-      const topic = 'sensor/nextMeasurementTime';
-      const message = JSON.stringify({ time });
+      const topic = 'getNewTime';
+      const message = JSON.stringify(true);
 
       client.publish(topic, message, {qos: 1}, (error) => {
         if (error) {
