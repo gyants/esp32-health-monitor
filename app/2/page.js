@@ -3,7 +3,7 @@ import { ChartArea } from "../components/ChartArea";
 import { Field } from "../components/Field";
 import { fetchData } from "../lib/influx";
 import { extractValue, formatDate, parseData } from "../utils/utils";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 const Home = () => {
   const [data, setData] = useState([])
@@ -41,8 +41,6 @@ const Home = () => {
     loadData()
   }, [])
 
-  const editModeInterval = false
-  const editModeNextMeasurement = false
   const connected = false
 
   return (
@@ -64,7 +62,7 @@ const Home = () => {
             refresh={handleFetchData}
           />
 
-          <div className="bg-gray-700 w-1/4 rounded-xl p-5 flex flex-col justify-between items-center py-10 px-10 text-center">
+          <div className="bg-gray-700 w-1/4 rounded-xl p-5 flex flex-col justify-center gap-32 items-center py-10 px-10 text-center">
             <div className="flex flex-col gap-3 w-full text-center">
               <p className="font-bold text-xl">Last Measurement</p>
                 <div className="flex gap-5 w-full justify-center items-center">
@@ -87,17 +85,17 @@ const Home = () => {
                 </div>
               </div>
               <div className="flex flex-col gap-3 w-full text-center">
-                <p className="font-bold text-xl">Next Measurement</p>
+                <p className="font-bold text-xl">Alarm</p>
                 <Field
                   type={'nextMeasure'}
                 />
             </div>
-            <div className="flex flex-col gap-3 w-full text-center">
+            <div className="hidden flex-col gap-3 w-full text-center">
                 <p className="font-bold text-xl">Interval</p>
                 <Field
                   type={'interval'}
                 />
-              </div>
+            </div>
           </div>
       </div>
        

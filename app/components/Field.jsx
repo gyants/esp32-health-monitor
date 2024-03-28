@@ -1,11 +1,23 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { notifyNextMeasure } from "../lib/actions";
+import { getTime,writeTime } from "../lib/influx";
 
 export const Field = ({type}) => {
     const [editModeNextMeasurement, setEditModeNextMeasurement] = useState(false)
     const [nextMeasurementTime, setNextMeasurementTime] = useState('00:00');
     const toggleEditModeNextMeasurement = () => {
         setEditModeNextMeasurement(!editModeNextMeasurement);
+        if (editModeNextMeasurement) {
+          writeTime(nextMeasurementTime)
+          .then(() => {
+            console.log("Time data successfully written to Firebase");
+          })
+          .catch((error) => {
+            console.error("Failed to write time data to Firebase:", error);
+          });
+          notifyNextMeasure(nextMeasurementTime)
+        } 
     };
     const handleNextMeasurementTimeChange = (e) => {
         setNextMeasurementTime(e.target.value);
@@ -20,6 +32,21 @@ export const Field = ({type}) => {
         setInterval(e.target.value);
     }
 
+    useEffect(() => {
+      const fetchTime = async () => {
+        try {
+          const fetchedTime = await getTime()
+          const { hour, minute } = fetchedTime; // Extract hour and minute from fetched time
+          const formattedTime = `${hour}:${minute < 10 ? '0' + minute : minute}`; // Format time
+          setNextMeasurementTime(formattedTime); // Update state with formatted time
+        } catch (error) {
+          console.error("Failed to get time:", error);
+        }
+      }
+      fetchTime()
+      
+    },[])
+
     return (
         <div className="flex justify-center items-center gap-4">
           {type === 'nextMeasure' ? 
@@ -33,9 +60,12 @@ export const Field = ({type}) => {
                 onKeyDown={(event) => {
                     if (event.key === 'Enter') {
                       toggleEditModeNextMeasurement();
+                    } else if (event.keyCode == 27) {
+                      console.log(event.key)
+                      setEditModeInterval(!editModeInterval)
                     }
                   }}
-                className="text-xl font-bold text-center text-black"
+                className="text-4xl w-64 h-16 font-bold text-center text-gray-700 border-2 bg-white rounded-lg"
                 step="60" // Allows entering seconds if you need finer granularity
               />
             )) 
@@ -48,10 +78,12 @@ export const Field = ({type}) => {
                 onChange={handleIntervalChange}
                 onKeyDown={(event) => {
                     if (event.key === 'Enter') {
-                        toggleEditModeInterval();
+                      toggleEditModeInterval();
+                    } else if (event.key === 'Escape') {
+                      setNextMeasurementTime(nextMeasurementTime)
                     }
                   }}
-                className="text-xl text-center w-16 text-black"
+                className="text-4xl font-bold text-center w-24 text-gray-700 border-2 rounded-lg bg-white"
               /> 
             ))}
           <a href="#" onClick={type === 'nextMeasure' ? toggleEditModeNextMeasurement : toggleEditModeInterval}>

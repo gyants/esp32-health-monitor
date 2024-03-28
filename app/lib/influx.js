@@ -1,11 +1,24 @@
 import { InfluxDB, Point } from '@influxdata/influxdb-client'
-
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, onValue, set } from "firebase/database"
 // Load environment variables for InfluxDB connection
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_APIKEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTHDOMAIN,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASEURL,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECTID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGEBUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APPID
+};
 
 const token = process.env.NEXT_PUBLIC_INFLUXDB_TOKEN;
 const url = process.env.NEXT_PUBLIC_INFLUX_URL;
 const org = process.env.NEXT_PUBLIC_INFLUX_ORG;
 const bucket = process.env.NEXT_PUBLIC_INFLUX_BUCKET;
+const app = initializeApp(firebaseConfig)
+const database = getDatabase(app);
 
 export async function generateTestData() {
     const client = new InfluxDB({ url, token });
@@ -41,8 +54,50 @@ export async function generateTestData() {
   
     const responseData = { "HR": hr, "O2": ox };
     return responseData;
-  }
+}
 
+export async function getTime() {
+  return new Promise((resolve, reject) => {
+    const db = getDatabase();
+    const timeRef = ref(db, '/');
+    
+    onValue(timeRef, (snapshot) => {
+      const data = snapshot.val();
+      // console.log("getTime", data);
+      resolve(data); // Resolve the promise with the data
+    }, (error) => {
+      console.error("Failed to fetch time:", error);
+      reject(error); // Reject the promise if there's an error
+    });
+  });
+}
+
+export async function writeTime(nextMeasurementTime) {
+  try {
+    // Convert HH:MM formatted string to integers
+    const [hourStr, minuteStr] = nextMeasurementTime.split(':');
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    // Construct data object to write to Firebase
+    const timeData = {
+      hour: hour,
+      minute: minute,
+    };
+
+    // Get a reference to the Firebase database
+    const db = getDatabase();
+    const timeRef = ref(db, '/'); // Specify the location in the database to write data
+
+    // Write data to Firebase
+    await set(timeRef, timeData);
+
+    console.log("Time data successfully written to Firebase:", timeData);
+  } catch (error) {
+    console.error("Failed to write time data to Firebase:", error);
+    throw error; // Rethrow the error to handle it at a higher level if needed
+  }
+}
 
 export async function fetchData() {
     try {
