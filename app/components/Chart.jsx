@@ -36,7 +36,7 @@ export const ChartComponent = ({isHeartRateVisible,isSpO2Visible,data}) => {
     useEffect(() => {
         setChartData(prevData => ({
             ...prevData,
-            labels: o2Data.map(data => new Date(data.time).toLocaleString()),
+            labels: heartData.map(data => new Date(data.time).toLocaleString()),
             datasets: prevData.datasets.map(dataset => {
                 if (dataset.label === 'Heart Rate') {
                     return { ...dataset, data: heartData.map(data => data.value), hidden: !isHeartRateVisible };
