@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { ChartComponent } from "./Chart"
 export const ChartArea = ({isLoading,data,refresh}) => {
-    console.log(data)
     const [isHeartRateVisible, setIsHeartRateVisible] = useState(true)
     const [isSpO2Visible, setIsSpO2Visible] = useState(true)
     return (
