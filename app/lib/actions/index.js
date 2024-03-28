@@ -55,7 +55,7 @@ export async function publish(time) {
       password: process.env.NEXT_PUBLIC_MQTT_PASSWORD,
     //   clean: false
     });
-
+    console.log(time)
     client.on('connect', function () {
       const topic = 'sensor/nextMeasurementTime';
       const message = JSON.stringify({ time });
