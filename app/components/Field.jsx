@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { notifyNextMeasure } from "../lib/actions";
+import { notifyNextMeasure, publish, updateCRON } from "../lib/actions";
 import { getTime,writeTime } from "../lib/influx";
 
 export const Field = ({type}) => {
@@ -12,6 +12,14 @@ export const Field = ({type}) => {
           writeTime(nextMeasurementTime)
           .then(() => {
             console.log("Time data successfully written to Firebase");
+            // Call updateCRON here, once the nextMeasurementTime is confirmed and written
+            updateCRON(nextMeasurementTime)
+              .then(() => {
+                console.log("CRON updated successfully with the new time")
+                publish(nextMeasurementTime).then(()=> console.log("Published time to MQTT Broker"))
+                .catch((error) => console.error("Failed to publish to MQTT:",error))
+            })
+              .catch((error) => console.error("Failed to update CRON:", error));
           })
           .catch((error) => {
             console.error("Failed to write time data to Firebase:", error);
@@ -20,7 +28,7 @@ export const Field = ({type}) => {
         } 
     };
     const handleNextMeasurementTimeChange = (e) => {
-        setNextMeasurementTime(e.target.value);
+      setNextMeasurementTime(e.target.value);
     };
 
     const [editModeInterval, setEditModeInterval] = useState(false);
@@ -38,6 +46,7 @@ export const Field = ({type}) => {
           const fetchedTime = await getTime()
           const { hour, minute } = fetchedTime; // Extract hour and minute from fetched time
           const formattedTime = `${hour}:${minute < 10 ? '0' + minute : minute}`; // Format time
+          publish(formattedTime)
           setNextMeasurementTime(formattedTime); // Update state with formatted time
         } catch (error) {
           console.error("Failed to get time:", error);
@@ -60,12 +69,9 @@ export const Field = ({type}) => {
                 onKeyDown={(event) => {
                     if (event.key === 'Enter') {
                       toggleEditModeNextMeasurement();
-                    } else if (event.keyCode == 27) {
-                      console.log(event.key)
-                      setEditModeInterval(!editModeInterval)
                     }
                   }}
-                className="text-4xl w-64 h-16 font-bold text-center text-gray-700 border-2 bg-white rounded-lg"
+                className="text-3xl w-full h-16 font-bold text-center text-gray-700 border-2 bg-white rounded-lg"
                 step="60" // Allows entering seconds if you need finer granularity
               />
             )) 
@@ -79,8 +85,6 @@ export const Field = ({type}) => {
                 onKeyDown={(event) => {
                     if (event.key === 'Enter') {
                       toggleEditModeInterval();
-                    } else if (event.key === 'Escape') {
-                      setNextMeasurementTime(nextMeasurementTime)
                     }
                   }}
                 className="text-4xl font-bold text-center w-24 text-gray-700 border-2 rounded-lg bg-white"

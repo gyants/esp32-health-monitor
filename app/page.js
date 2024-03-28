@@ -1,55 +1,46 @@
-// "use client"
+"use client"
 import { ChartArea } from "./components/ChartArea";
+import { Field } from "./components/Field";
 import { fetchData } from "./lib/influx";
-import { extractValue, parseData } from "./utils/utils";
-// import { useState, useEffect, useCallback } from "react";
+import { extractValue, formatDate, parseData } from "./utils/utils";
+import { useState, useEffect } from "react";
 
-const Home = async () => {
-  const data = await fetchData()
-  // console.log(data)
-  const sortedData = data.sort((a, b) => new Date(b.time) - new Date(a.time));
-  const parsedData = parseData(sortedData)
-  const isLoading = false
-  let [latestHeart,latestOxygen] = extractValue(sortedData)  
-  // const [isLoading, setIsLoading] = useState(false)
-  
-  // const [data, setData] = useState([])
-  // const [latestHeart, setLatestHeart] = useState('0')
-  // const [latestOxygen, setLatestOxygen] = useState('0')
-  // const fetchChartData = async () => {
-  //   // Your fetchData function logic here
-  //   try {
-  //     setIsLoading(true)
-  //     const newData = await fetchData(); // Assuming fetchData is defined or imported
-  //     const sortedData = newData.sort((a, b) => new Date(b.time) - new Date(a.time));
-  //     const extractedData = extractValue(sortedData) 
-  //     const parsedData = parseData(sortedData)
-  //     setLatestHeart(extractedData[0])
-  //     setLatestOxygen(extractedData[1])
-  //     setData(parsedData);
-  //   } catch (error) {
-  //     console.log("Failed to fetch data:", error)
-  //   } finally {
-  
-  //     setIsLoading(false); // Ensure loading state is updated regardless of success/failure
-  //   }
-    
-  // }
+const Home = () => {
+  const [data, setData] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [latestHeart, setLatestHeart] = useState('0')
+  const [latestOxygen, setLatestOxygen] = useState('0')
+  const [latestTime, setLatestTime] = useState('0')
 
-  // useEffect(() => {
-  //   const fetchChartData = async () => {
-  //     try {
-  //       const fetchedData = await fetchData()
-  //       setData(fetchedData)
-  //     } catch (error) {
-  //       console.error("Error fetching data:",error)
-  //     }
-  //   }
-  //   fetchChartData()
-  // }, []);
+  const fetchRoutine = async () => {
+    const fetchedData = await fetchData(); // Fetch data
+    const sortedData = fetchedData.sort((a, b) => new Date(a.time) - new Date(b.time)).slice(-64);
+    const parsedData = parseData(sortedData); // Parse fetched data
+    const extractedData = extractValue(sortedData.reverse())
+    setData(parsedData)
+    setLatestHeart(extractedData[0])
+    setLatestOxygen(extractedData[1])
+    setLatestTime(extractedData[2])
+  }
 
-  const editModeInterval = false
-  const editModeNextMeasurement = false
+  const handleFetchData = async () => {
+    await fetchRoutine()
+  };
+
+  useEffect( () => {
+    const loadData = async () => {
+      setIsLoading(true)
+      try {
+        await fetchRoutine()
+      } catch (error) {
+        console.error("Failed to fetch data:",error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
   const connected = false
 
   return (
@@ -67,11 +58,11 @@ const Home = async () => {
 
           <ChartArea
             isLoading = {isLoading}
-            data = {parsedData}
-            refresh={0}
+            data = {data}
+            refresh={handleFetchData}
           />
 
-          <div className="bg-gray-700 w-1/4 rounded-xl p-5 flex flex-col justify-between items-center py-10 px-10 text-center">
+          <div className="bg-gray-700 w-1/4 rounded-xl p-5 flex flex-col justify-center gap-32 items-center py-10 px-10 text-center">
             <div className="flex flex-col gap-3 w-full text-center">
               <p className="font-bold text-xl">Last Measurement</p>
                 <div className="flex gap-5 w-full justify-center items-center">
@@ -88,49 +79,23 @@ const Home = async () => {
                   <span className="text-6xl font-bold w-full">{latestOxygen}</span>
                   <span className="w-1/12">%</span>
                 </div>
+                <div className="flex w-full items-center justify-center">
+        
+                  <span className="text-md w-full">{formatDate(latestTime,'customFormat')}</span>
+                </div>
               </div>
               <div className="flex flex-col gap-3 w-full text-center">
-                <p className="font-bold text-xl">Next Measurement</p>
-                <div className="flex justify-center items-center gap-4">
-                    {/* Toggle between text display and input field based on edit mode */}
-                    {!editModeNextMeasurement ? (
-                        <span className="text-6xl font-bold">00</span>
-                    ) : (
-                        <input
-                            type="time"
-                            value={0}
-                            className="text-xl font-bold text-center text-black"
-                            // The following attributes configure it for a 24-hour format
-                            step="60" // Allows entering seconds if you need finer granularity
-                        />
-                    )}
-                    <a href="#">
-                  <svg width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4.743 16.497H0.5V12.254L11.935 0.819001C12.1225 0.63153 12.3768 0.526215 12.642 0.526215C12.9072 0.526215 13.1615 0.63153 13.349 0.819001L16.178 3.647C16.271 3.73987 16.3447 3.85016 16.3951 3.97156C16.4454 4.09296 16.4713 4.22309 16.4713 4.3545C16.4713 4.48592 16.4454 4.61604 16.3951 4.73744C16.3447 4.85884 16.271 4.96913 16.178 5.062L4.743 16.497ZM0.5 18.497H18.5V20.497H0.5V18.497Z" fill="white"/>
-                  </svg>
-                </a>
-              </div>
+                <p className="font-bold text-xl">Alarm</p>
+                <Field
+                  type={'nextMeasure'}
+                />
             </div>
-            <div className="flex flex-col gap-3 w-full text-center">
+            <div className="hidden flex-col gap-3 w-full text-center">
                 <p className="font-bold text-xl">Interval</p>
-                <div className="flex items-center gap-4 justify-center">
-                    {/* Toggle between input field and text display based on edit mode */}
-                    {!editModeInterval ? (
-                        <span className="text-4xl font-bold">0 mins</span>
-                    ) : (
-                        <input
-                            type="number"
-                            value={0}
-                            className="text-xl text-center w-16 text-black"
-                        /> 
-                    )}
-                <a href="#">
-                  <svg width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg" role="button">
-                    <path d="M4.743 16.497H0.5V12.254L11.935 0.819001C12.1225 0.63153 12.3768 0.526215 12.642 0.526215C12.9072 0.526215 13.1615 0.63153 13.349 0.819001L16.178 3.647C16.271 3.73987 16.3447 3.85016 16.3951 3.97156C16.4454 4.09296 16.4713 4.22309 16.4713 4.3545C16.4713 4.48592 16.4454 4.61604 16.3951 4.73744C16.3447 4.85884 16.271 4.96913 16.178 5.062L4.743 16.497ZM0.5 18.497H18.5V20.497H0.5V18.497Z" fill="white"/>
-                  </svg>
-                </a>
-              </div>
-              </div>
+                <Field
+                  type={'interval'}
+                />
+            </div>
           </div>
       </div>
        
