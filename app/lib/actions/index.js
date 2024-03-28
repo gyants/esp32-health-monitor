@@ -52,14 +52,15 @@ export async function publish(time) {
     const client  = mqtt.connect('mqtts://47c8123bb31c409aa7d801e737229793.s1.eu.hivemq.cloud', {
       port: 8883,
       username: process.env.NEXT_PUBLIC_MQTT_USERNAME,
-      password: process.env.NEXT_PUBLIC_MQTT_PASSWORD
+      password: process.env.NEXT_PUBLIC_MQTT_PASSWORD,
+      clean: false
     });
 
     client.on('connect', function () {
       const topic = 'sensor/nextMeasurementTime';
       const message = JSON.stringify({ time });
 
-      client.publish(topic, message, {}, (error) => {
+      client.publish(topic, message, {qos: 1}, (error) => {
         if (error) {
           console.error('Publish error:', error); 
         }
@@ -69,6 +70,12 @@ export async function publish(time) {
 
     client.on('error', (error) => {
         console.error('Failed to connect to MQTT broker. Connection error:', error);
+    });
+
+    // Listen for acknowledgments (PUBACK)
+    client.on('puback', (packet) => {
+        console.log('Message published successfully:', packet);
+        client.end(); // Close the client connection after successful publishing
     });
 
 }
