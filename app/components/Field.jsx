@@ -9,14 +9,16 @@ export const Field = ({type}) => {
     const toggleEditModeNextMeasurement = () => {
         setEditModeNextMeasurement(!editModeNextMeasurement);
         if (editModeNextMeasurement) {
-          writeTime(nextMeasurementTime)
+          let timeData = nextMeasurementTime
+          writeTime(timeData)
           .then(() => {
             console.log("Time data successfully written to Firebase");
             // Call updateCRON here, once the nextMeasurementTime is confirmed and written
-            updateCRON(nextMeasurementTime)
+            updateCRON(timeData)
               .then(() => {
                 console.log("CRON updated successfully with the new time")
-                publish(nextMeasurementTime).then(()=> console.log("Published time to MQTT Broker"))
+                console.log(timeData)
+                publish(timeData).then(()=> console.log("Published time to MQTT Broker"))
                 .catch((error) => console.error("Failed to publish to MQTT:",error))
             })
               .catch((error) => console.error("Failed to update CRON:", error));
@@ -24,7 +26,7 @@ export const Field = ({type}) => {
           .catch((error) => {
             console.error("Failed to write time data to Firebase:", error);
           });
-          notifyNextMeasure(nextMeasurementTime)
+          notifyNextMeasure(timeData)
         } 
     };
     const handleNextMeasurementTimeChange = (e) => {
